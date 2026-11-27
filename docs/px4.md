@@ -96,7 +96,7 @@ The output must follow the direction convention in [Optical Flow > Setup](https:
 Configure a dedicated [MAVLink instance](https://docs.px4.io/main/en/peripherals/mavlink_peripherals.html) on the port the board is wired to:
 
 | Parameter                                                                                              | Value                                                       |
-| --------------------------------------------------------------------------------------------- | -------- | ------ | --------------------------- | --------------------------------- |
+| ------------------------------------------------------------------------------------------------------ | ----------------------------------------------------------- |
 | [MAV_1_CONFIG](https://docs.px4.io/main/en/advanced_config/parameter_reference.html#MAV_1_CONFIG)       | The port the board is connected to (for example `TELEM2`).  |
 | [MAV_1_MODE](https://docs.px4.io/main/en/advanced_config/parameter_reference.html#MAV_1_MODE)           | `Custom` (no default streams).                              |
 | [MAV_1_FORWARD](https://docs.px4.io/main/en/advanced_config/parameter_reference.html#MAV_1_FORWARD)     | `0` (disabled).                                             |
@@ -111,7 +111,7 @@ Reboot after setting `MAV_1_CONFIG` so that the port's baud rate parameter appea
 Set the following parameters to enable optical flow fusion in [EKF2](https://docs.px4.io/main/en/sensor/optical_flow.html#ekf2):
 
 | Parameter                                                                                                                                                                                                                                                                                       | Value                                           |
-| --------------------------------------------------------------------------------------------- | -------- | ------ | --------------------------- | --------------------------------- |
+| ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | ----------------------------------------------- |
 | [EKF2_OF_CTRL](https://docs.px4.io/main/en/advanced_config/parameter_reference.html#EKF2_OF_CTRL)                                                                                                                                                                                                | `1` (enabled).                                  |
 | [EKF2_OF_GYR_SRC](https://docs.px4.io/main/en/advanced_config/parameter_reference.html#EKF2_OF_GYR_SRC)                                                                                                                                                                                          | `1` (Internal).                                 |
 | [EKF2_OF_DELAY](https://docs.px4.io/main/en/advanced_config/parameter_reference.html#EKF2_OF_DELAY)                                                                                                                                                                                              | `20` (ms).                                      |
