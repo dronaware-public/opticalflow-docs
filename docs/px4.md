@@ -51,21 +51,24 @@ For example, an OV3660 board on medium contrast ground at 1 m, with the vehicle 
 
 Connect the board to a spare flight controller UART (for example `TELEM2`):
 
-| ESP32 board | Flight controller      |
-| ----------- | ---------------------- |
-| TX          | RX                     |
-| RX          | TX                     |
-| GND         | GND                    |
-| Power input | Regulated power output |
+| ESP32 board | Flight controller             |
+| ----------- | ----------------------------- |
+| TX          | RX                            |
+| RX          | TX                            |
+| GND         | GND                           |
+| `V_IN`      | Regulated power supply (note) |
 
 The firmware only transmits, so the flight controller TX to board RX line is unused (see [MAVLink Messages](#mavlink-messages)).
 Both sides use 3.3 V logic, so no level shifter is needed.
-Power the board from a regulated flight controller output that matches the voltage and current its manufacturer specifies for the board's power input.
-For example, the AI-Thinker ESP32-CAM takes 5 V on its 5V pin; check each board's requirements before powering it from the flight controller.
+
+> [!NOTE]
+> `V_IN` is the board's power input pin, for example the 5V pin on the AI-Thinker ESP32-CAM.
+> Connect it to a regulated power supply on the flight controller whose voltage and current meet the board manufacturer's specification for that pin.
+> Check each board's requirements before powering it from the flight controller.
 
 > [!TIP]
 > ESP32 camera boards draw current in short bursts while capturing frames.
-> A low-ESR electrolytic capacitor (for example 470 µF, 10 V or higher) across the board's power input and GND pins prevents brownout resets, particularly on the AI-Thinker ESP32-CAM.
+> A low-ESR electrolytic capacitor (for example 470 µF, 10 V or higher) across the board's `V_IN` and GND pins prevents brownout resets, particularly on the AI-Thinker ESP32-CAM.
 
 > [!WARNING]
 > On the AI-Thinker ESP32-CAM, the default MAVLink pins (1 / 3) are on UART0, which is also used by the USB-serial adapter.
