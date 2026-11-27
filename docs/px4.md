@@ -20,15 +20,32 @@ The following boards are currently available for activation.
 The UART column lists the default ESP32 pins that carry MAVLink to the flight controller.
 They can be customised during the flash session, as far as the board's free pins allow.
 
-| Board                                                                                         | SoC      | Camera         | Default UART TX / RX (GPIO) |
-| --------------------------------------------------------------------------------------------- | -------- | -------------- | --------------------------- |
-| [AI-Thinker ESP32-CAM](https://randomnerdtutorials.com/esp32-cam-ai-thinker-pinout/)          | ESP32    | OV2640, OV3660 | 1 / 3                       |
-| [LILYGO TTGO T-Journal](https://lilygo.cc/products/t-journal)                                 | ESP32    | OV2640         | 14 / 13                     |
-| [Waveshare ESP32-S3-CAM](https://docs.waveshare.com/ESP32-S3-CAM-OVxxxx#interface-definition) | ESP32-S3 | GC0308, OV3660 | 43 / 44                     |
+| Board                                                                                         | SoC      | Camera | Default UART TX / RX (GPIO) | Rated flow limit (rad/s per axis) |
+| --------------------------------------------------------------------------------------------- | -------- | ------ | --------------------------- | --------------------------------- |
+| [AI-Thinker ESP32-CAM](https://randomnerdtutorials.com/esp32-cam-ai-thinker-pinout/)          | ESP32    | OV2640 | 1 / 3                       | 2.61                              |
+| [AI-Thinker ESP32-CAM](https://randomnerdtutorials.com/esp32-cam-ai-thinker-pinout/)          | ESP32    | OV3660 | 1 / 3                       | 2.97                              |
+| [LILYGO TTGO T-Journal](https://lilygo.cc/products/t-journal)                                 | ESP32    | OV2640 | 14 / 13                     | 2.62                              |
+| [Waveshare ESP32-S3-CAM](https://docs.waveshare.com/ESP32-S3-CAM-OVxxxx#interface-definition) | ESP32-S3 | GC0308 | 43 / 44                     | 3.23                              |
+| [Waveshare ESP32-S3-CAM](https://docs.waveshare.com/ESP32-S3-CAM-OVxxxx#interface-definition) | ESP32-S3 | OV3660 | 43 / 44                     | 2.93                              |
 
 The complete list of boards, with their test status, is maintained in the _Device compatibility_ section of the [Dronaware documentation](https://dronaware.com/opticalflow/#documentation).
 
 The firmware applies a lens calibration for each camera module, so the flow output is already in radians and [SENS_FLOW_SCALE](https://docs.px4.io/main/en/advanced_config/parameter_reference.html#SENS_FLOW_SCALE) should normally be left at `1.0`.
+
+### Flow Rate Limits
+
+The rated flow limit is the highest flow rate, per image axis, that each board and camera measures reliably on firmware 1.1.04.
+It was rated in the Dronaware firmware emulator, running each profile at its measured board timing, over a random ground texture of medium and high contrast (signal-to-noise ratio 5 and 8), which gave the same limit.
+A speed counts as measured when at least 60 % of measurement intervals produce a message and at most 1 % of messages are wrong by more than 1 pixel or 15 %, whichever is larger.
+Where the two axes differ, the lower value is listed.
+On low-contrast ground (signal-to-noise ratio 3) the limit is about 22 % lower.
+
+The camera sees translation and rotation together, so the usable ground speed at height _h_ is about _h_ × (limit − rotation rate).
+For example, an OV3660 board on medium contrast ground at 1 m, with the vehicle not rotating, measures up to about 2.9 m/s.
+
+> [!IMPORTANT]
+> These limits are emulator ratings. On the boards, they have been confirmed only up to about 1.6 rad/s (Testbench at a 60 Hz display refresh), and flight has been tested only within the `SENS_FLOW_MAXR=1.0` limit (see [Estimator](#estimator)).
+> Do not raise `SENS_FLOW_MAXR` based on this table.
 
 ## Wiring
 
@@ -76,7 +93,7 @@ The output must follow the direction convention in [Optical Flow > Setup](https:
 Configure a dedicated [MAVLink instance](https://docs.px4.io/main/en/peripherals/mavlink_peripherals.html) on the port the board is wired to:
 
 | Parameter                                                                                              | Value                                                       |
-| ------------------------------------------------------------------------------------------------------ | ----------------------------------------------------------- |
+| --------------------------------------------------------------------------------------------- | -------- | ------ | --------------------------- | --------------------------------- |
 | [MAV_1_CONFIG](https://docs.px4.io/main/en/advanced_config/parameter_reference.html#MAV_1_CONFIG)       | The port the board is connected to (for example `TELEM2`).  |
 | [MAV_1_MODE](https://docs.px4.io/main/en/advanced_config/parameter_reference.html#MAV_1_MODE)           | `Custom` (no default streams).                              |
 | [MAV_1_FORWARD](https://docs.px4.io/main/en/advanced_config/parameter_reference.html#MAV_1_FORWARD)     | `0` (disabled).                                             |
@@ -91,7 +108,7 @@ Reboot after setting `MAV_1_CONFIG` so that the port's baud rate parameter appea
 Set the following parameters to enable optical flow fusion in [EKF2](https://docs.px4.io/main/en/sensor/optical_flow.html#ekf2):
 
 | Parameter                                                                                                                                                                                                                                                                                       | Value                                           |
-| ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | ----------------------------------------------- |
+| --------------------------------------------------------------------------------------------- | -------- | ------ | --------------------------- | --------------------------------- |
 | [EKF2_OF_CTRL](https://docs.px4.io/main/en/advanced_config/parameter_reference.html#EKF2_OF_CTRL)                                                                                                                                                                                                | `1` (enabled).                                  |
 | [EKF2_OF_GYR_SRC](https://docs.px4.io/main/en/advanced_config/parameter_reference.html#EKF2_OF_GYR_SRC)                                                                                                                                                                                          | `1` (Internal).                                 |
 | [EKF2_OF_DELAY](https://docs.px4.io/main/en/advanced_config/parameter_reference.html#EKF2_OF_DELAY)                                                                                                                                                                                              | `20` (ms).                                      |
