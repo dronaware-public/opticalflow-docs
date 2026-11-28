@@ -9,7 +9,7 @@ A separate downward facing [distance sensor](https://docs.px4.io/main/en/sensor/
 > [!NOTE]
 > Dronaware Optical Flow is sold as a per-device license (US$29), under the [Optical Flow End User License Agreement](https://dronaware.com/legal/eula).
 > The firmware is flashed and activated from a web browser at [dronaware.com/opticalflow](https://dronaware.com/opticalflow/).
-> This guide describes firmware version 1.1.04; update older boards before following it.
+> This guide describes firmware version 1.1.07; update older boards before following it.
 
 > [!WARNING]
 > Activation permanently secures the ESP32 board, so afterwards it can only run Dronaware firmware. It can still be updated, re-flashed and switched to another supported camera from the browser.
@@ -22,11 +22,11 @@ They can be customised during the flash session, as far as the board's free pins
 
 | Board                                                                                         | SoC      | Camera | Default UART TX / RX (GPIO) | Rated flow limit (rad/s per axis) |
 | --------------------------------------------------------------------------------------------- | -------- | ------ | --------------------------- | --------------------------------- |
-| [AI-Thinker ESP32-CAM](https://randomnerdtutorials.com/esp32-cam-ai-thinker-pinout/)          | ESP32    | OV2640 | 1 / 3                       | 2.61                              |
-| [AI-Thinker ESP32-CAM](https://randomnerdtutorials.com/esp32-cam-ai-thinker-pinout/)          | ESP32    | OV3660 | 1 / 3                       | 2.97                              |
-| [LILYGO TTGO T-Journal](https://lilygo.cc/products/t-journal)                                 | ESP32    | OV2640 | 14 / 13                     | 2.62                              |
-| [Waveshare ESP32-S3-CAM](https://docs.waveshare.com/ESP32-S3-CAM-OVxxxx#interface-definition) | ESP32-S3 | GC0308 | 43 / 44                     | 3.23                              |
-| [Waveshare ESP32-S3-CAM](https://docs.waveshare.com/ESP32-S3-CAM-OVxxxx#interface-definition) | ESP32-S3 | OV3660 | 43 / 44                     | 2.93                              |
+| [AI-Thinker ESP32-CAM](https://randomnerdtutorials.com/esp32-cam-ai-thinker-pinout/)          | ESP32    | OV2640 | 1 / 3                       | 5.21                              |
+| [AI-Thinker ESP32-CAM](https://randomnerdtutorials.com/esp32-cam-ai-thinker-pinout/)          | ESP32    | OV3660 | 1 / 3                       | 5.94                              |
+| [LILYGO TTGO T-Journal](https://lilygo.cc/products/t-journal)                                 | ESP32    | OV2640 | 14 / 13                     | 5.24                              |
+| [Waveshare ESP32-S3-CAM](https://docs.waveshare.com/ESP32-S3-CAM-OVxxxx#interface-definition) | ESP32-S3 | GC0308 | 43 / 44                     | 6.49                              |
+| [Waveshare ESP32-S3-CAM](https://docs.waveshare.com/ESP32-S3-CAM-OVxxxx#interface-definition) | ESP32-S3 | OV3660 | 43 / 44                     | 5.86                              |
 
 The complete list of boards, with their test status, is maintained in the _Device compatibility_ section of the [Dronaware documentation](https://dronaware.com/opticalflow/#documentation).
 
@@ -34,17 +34,17 @@ The firmware applies a lens calibration for each camera module, so the flow outp
 
 ### Flow Rate Limits
 
-The rated flow limit is the highest flow rate, per image axis, that each board and camera measures reliably on firmware 1.1.04.
+The rated flow limit is the highest flow rate, per image axis, that each board and camera measures reliably on firmware 1.1.07.
 It was rated in the Dronaware firmware emulator, running each profile at its measured board timing, over a random ground texture of medium and high contrast (signal-to-noise ratio 5 and 8), which gave the same limit.
 A speed counts as measured when at least 60 % of measurement intervals produce a message and at most 1 % of messages are wrong by more than 1 pixel or 15 %, whichever is larger.
 Where the two axes differ, the lower value is listed.
-On low-contrast ground (signal-to-noise ratio 3) the limit is about 22 % lower.
+On low-contrast ground (signal-to-noise ratio 3) the limit is about 40 % lower.
 
 The camera sees translation and rotation together, so the usable ground speed at height _h_ is about _h_ × (limit − rotation rate).
-For example, an OV3660 board on medium contrast ground at 1 m, with the vehicle not rotating, measures up to about 2.9 m/s.
+For example, an OV3660 board on medium contrast ground at 1 m, with the vehicle not rotating, measures up to about 5.9 m/s.
 
 > [!IMPORTANT]
-> These limits are emulator ratings. On the boards, they have been confirmed only up to about 1.6 rad/s (Testbench at a 60 Hz display refresh), and flight has been tested only within the `SENS_FLOW_MAXR=1.0` limit (see [Estimator](#estimator)).
+> These limits are emulator ratings. On the boards, firmware 1.1.07 has been confirmed only at low flow rates (Testbench), and flight has been tested only within the `SENS_FLOW_MAXR=1.0` limit (see [Estimator](#estimator)).
 > Do not raise `SENS_FLOW_MAXR` based on this table.
 
 ## Wiring
@@ -135,7 +135,7 @@ Configure the downward [distance sensor](https://docs.px4.io/main/en/sensor/rang
 The firmware uses MAVLink 2 at 115200 baud, 8 data bits, no parity, 1 stop bit.
 
 - **Outgoing:** [OPTICAL_FLOW_RAD](https://mavlink.io/en/messages/common.html#OPTICAL_FLOW_RAD) from system ID `42`, component ID `197` (`MAV_COMP_ID_VISUAL_INERTIAL_ODOMETRY`).
-  - Each message states its own measurement interval in `integration_time_us`. Typical values, measured on firmware 1.1.04:
+  - Each message states its own measurement interval in `integration_time_us`. Typical values over textured ground, measured on firmware 1.1.07:
 
     | Camera | Message rate | `integration_time_us` |
     | ------ | ------------ | --------------------- |
@@ -143,6 +143,7 @@ The firmware uses MAVLink 2 at 115200 baud, 8 data bits, no parity, 1 stop bit.
     | OV2640 | about 89 Hz  | about `11100`         |
     | GC0308 | about 132 Hz | about `7600`          |
 
+  - A measurement interval without a reliable result sends no message, so over textureless or poorly lit ground the message rate drops below these values.
   - `distance` is always `-1` (unknown); PX4 ignores it and uses the separate distance sensor.
   - `integrated_xgyro`, `integrated_ygyro` and `integrated_zgyro` are always `NaN`; PX4 compensates rotation with its own gyro (see [Estimator](#estimator)).
 - **Incoming:** none. The firmware needs no data from the flight controller.
@@ -152,8 +153,9 @@ At 132 Hz it uses about 7.4 kB/s of the roughly 11.5 kB/s available at 115200 ba
 
 ## Verification
 
-1. In the [MAVLink Shell](https://docs.px4.io/main/en/debug/mavlink_shell.html), run `uorb top sensor_optical_flow` and check that the topic updates at about the rate listed for your camera in [MAVLink Messages](#mavlink-messages).
-2. In the [MAVLink Shell](https://docs.px4.io/main/en/debug/mavlink_shell.html), run `listener sensor_optical_flow` and check that `quality` rises above zero over a textured surface.
+1. In the [MAVLink Shell](https://docs.px4.io/main/en/debug/mavlink_shell.html), run `uorb top sensor_optical_flow` with the board over a textured surface, and check that the topic updates at about the rate listed for your camera in [MAVLink Messages](#mavlink-messages).
+2. In the [MAVLink Shell](https://docs.px4.io/main/en/debug/mavlink_shell.html), run `listener sensor_optical_flow` and check that `quality` is above zero over a textured surface.
+   Over a plain, textureless surface the firmware sends fewer or no messages, so the topic slows or stops updating.
 3. With the propellers removed, run `listener estimator_optical_flow_vel` in the MAVLink Shell, hold the vehicle over a textured surface and rotate it about its roll and pitch axes.
    `flow_rate_uncompensated` should follow `gyro_rate`, and `flow_rate_compensated` should stay near zero.
    Because the message gyro fields are `NaN`, the check in [Optical Flow > Scale Factor](https://docs.px4.io/main/en/sensor/optical_flow.html#scale-factor) cannot be used.
