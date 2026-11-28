@@ -9,7 +9,7 @@ A separate downward facing [distance sensor](https://docs.px4.io/main/en/sensor/
 > [!NOTE]
 > Dronaware Optical Flow is sold as a per-device license (US$29), under the [Optical Flow End User License Agreement](https://dronaware.com/legal/eula).
 > The firmware is flashed and activated from a web browser at [dronaware.com/opticalflow](https://dronaware.com/opticalflow/).
-> This guide describes firmware version 1.1.07; update older boards before following it.
+> This guide describes firmware version 1.1.08; update older boards before following it.
 
 > [!WARNING]
 > Activation permanently secures the ESP32 board, so afterwards it can only run Dronaware firmware. It can still be updated, re-flashed and switched to another supported camera from the browser.
@@ -34,7 +34,7 @@ The firmware applies a lens calibration for each camera module, so the flow outp
 
 ### Flow Rate Limits
 
-The rated flow limit is the highest flow rate, per image axis, that each board and camera measures reliably on firmware 1.1.07.
+The rated flow limit is the highest flow rate, per image axis, that each board and camera measures reliably on firmware 1.1.08.
 It was rated in the Dronaware firmware emulator, running each profile at its measured board timing, over a random ground texture of medium and high contrast (signal-to-noise ratio 5 and 8), which gave the same limit.
 A speed counts as measured when at least 60 % of measurement intervals produce a message and at most 1 % of messages are wrong by more than 1 pixel or 15 %, whichever is larger.
 Where the two axes differ, the lower value is listed.
@@ -44,7 +44,7 @@ The camera sees translation and rotation together, so the usable ground speed at
 For example, an OV3660 board on medium contrast ground at 1 m, with the vehicle not rotating, measures up to about 5.9 m/s.
 
 > [!IMPORTANT]
-> These limits are emulator ratings. On the boards, firmware 1.1.07 has been confirmed only at low flow rates (Testbench), and flight has been tested only within the `SENS_FLOW_MAXR=1.0` limit (see [Estimator](#estimator)).
+> These limits are emulator ratings. On the boards, firmware 1.1.08 has been confirmed only at low flow rates (Testbench), and flight has been tested only within the `SENS_FLOW_MAXR=1.0` limit (see [Estimator](#estimator)).
 > Do not raise `SENS_FLOW_MAXR` based on this table.
 
 ## Wiring
@@ -135,7 +135,7 @@ Configure the downward [distance sensor](https://docs.px4.io/main/en/sensor/rang
 The firmware uses MAVLink 2 at 115200 baud, 8 data bits, no parity, 1 stop bit.
 
 - **Outgoing:** [OPTICAL_FLOW_RAD](https://mavlink.io/en/messages/common.html#OPTICAL_FLOW_RAD) from system ID `42`, component ID `197` (`MAV_COMP_ID_VISUAL_INERTIAL_ODOMETRY`).
-  - Each message states its own measurement interval in `integration_time_us`. Typical values over textured ground, measured on firmware 1.1.07:
+  - Each message states its own measurement interval in `integration_time_us`. Typical values over textured ground, measured on firmware 1.1.08:
 
     | Camera | Message rate | `integration_time_us` |
     | ------ | ------------ | --------------------- |
